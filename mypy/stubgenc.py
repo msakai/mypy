@@ -66,6 +66,7 @@ def generate_stub_for_c_module_body(module: ModuleType,
             generate_c_function_stub(module, name, obj, functions, imports=imports, sigs=sigs)
             done.add(name)
     types: List[str] = []
+    has_submodules = False
     for name, obj in items:
         if name.startswith('__') and name.endswith('__'):
             continue
@@ -75,6 +76,7 @@ def generate_stub_for_c_module_body(module: ModuleType,
             done.add(name)
         if isinstance(obj, ModuleType):
             generate_stub_for_c_module_body(obj, os.path.join(os.path.splitext(target)[0], name + '.pyi'))
+            has_submodules = True
     variables = []
     for name, obj in items:
         if name.startswith('__') and name.endswith('__'):
@@ -96,6 +98,8 @@ def generate_stub_for_c_module_body(module: ModuleType,
     for line in functions:
         output.append(line)
     output = add_typing_import(output)
+    if has_submodules:
+        target = os.path.join(os.path.splitext(target)[0], '__init__.pyi')
     with open(target, 'w') as file:
         for line in output:
             file.write('%s\n' % line)
