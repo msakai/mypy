@@ -48,6 +48,12 @@ def generate_stub_for_c_module(module_name: str,
     """
     module = importlib.import_module(module_name)
     assert is_c_module(module), '%s is not a C module' % module_name
+    generate_stub_for_c_module_body(module, target, sigs, class_sigs)
+
+def generate_stub_for_c_module_body(module: ModuleType,
+                                    target: str,
+                                    sigs: Optional[Dict[str, str]] = None,
+                                    class_sigs: Optional[Dict[str, str]] = None) -> None:
     subdir = os.path.dirname(target)
     if subdir and not os.path.isdir(subdir):
         os.makedirs(subdir)
@@ -67,6 +73,8 @@ def generate_stub_for_c_module(module_name: str,
             generate_c_type_stub(module, name, obj, types, imports=imports, sigs=sigs,
                                  class_sigs=class_sigs)
             done.add(name)
+        if isinstance(obj, ModuleType):
+            generate_stub_for_c_module_body(obj, os.path.join(os.path.splitext(target)[0], name + '.pyi'))
     variables = []
     for name, obj in items:
         if name.startswith('__') and name.endswith('__'):
